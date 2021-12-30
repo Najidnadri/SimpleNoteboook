@@ -27,7 +27,7 @@ fn main() {
     match demo_request {
         Action::ValidateAccount(user) => {},
         Action::RegisterAccount(user) => {
-
+            println!("register user")
         },
         Action::SavePage => {},
     }
@@ -42,5 +42,5 @@ fn validate_account(user: User) {
 }
 
 fn save_page() {
-    
+
 }
