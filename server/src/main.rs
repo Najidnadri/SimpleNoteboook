@@ -1,12 +1,13 @@
-struct User {
-    username: String,
-    email: String,
-    password: String,
-}
+mod error;
+mod handler;
+
+
+use error::RegisterError;
+use handler::{RegisterInfo, User, LoginInfo, filter_error};
 
 enum Action {
-    ValidateAccount(User),
-    RegisterAccount(User),
+    ValidateAccount(LoginInfo),
+    RegisterAccount(RegisterInfo),
     SavePage,
 }
 
@@ -17,30 +18,33 @@ enum ServerResponse {
 }
 
 fn main() {
-    let demo_user = User {
+    let demo_user = RegisterInfo {
         username: "Najidnadri".to_string(),
-        email: "muhd.najid.nadri@gmail.com".to_string(),
-        password: "najidnadri".to_string(),
+        email: "mohd.najid.nadri@gmail.com".to_string(),
+        password: "M_uhd_na_jid29".to_string(),
     };
     let demo_request = Action::RegisterAccount(demo_user);
 
     match demo_request {
-        Action::ValidateAccount(user) => {},
+        Action::ValidateAccount(_user) => {},
         Action::RegisterAccount(user) => {
-            println!("register user")
+            println!("registering user");
+            let registering = user.register_account();
+            match registering {
+                Ok(_) => println!("User Registered!"),
+                Err(e) => {
+                    filter_error(e);
+                }
+            }
         },
         Action::SavePage => {},
     }
 }
 
-fn register_account(user: User) {
+fn _validate_account(_user: User) {
 
 }
 
-fn validate_account(user: User) {
-
-}
-
-fn save_page() {
+fn _save_page() {
 
 }
