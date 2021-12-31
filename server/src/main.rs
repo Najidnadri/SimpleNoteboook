@@ -1,5 +1,6 @@
 mod error;
 mod handler;
+mod testing;
 
 
 use error::RegisterError;

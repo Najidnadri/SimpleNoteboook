@@ -31,18 +31,23 @@ impl RegisterInfo {
         match self.check_existed(users) {
             Ok(_) => {
                 let pass = &self.password;
-                if check_password_secure(pass) {
-                    let hash = bcrypt::hash(pass, bcrypt::DEFAULT_COST).expect("cannot brcypt pass");
-                    let user = User {
-                        username: self.username.clone(),
-                        email: self.email.clone(),
-                        hash,
-                    };
-                    let serialized_user = serde_json::to_string(&user).expect("cannot serialize user");
-                    
-                    //write to file
-                    let mut writer = BufWriter::new(file);
-                    writeln!(writer, "{}", serialized_user).expect("cannot write to users.txt");
+                match check_password_secure(pass) {
+                    Ok(_) => {
+                        let hash = bcrypt::hash(pass, bcrypt::DEFAULT_COST).expect("cannot brcypt pass");
+                        let user = User {
+                            username: self.username.clone(),
+                            email: self.email.clone(),
+                            hash,
+                        };
+                        let serialized_user = serde_json::to_string(&user).expect("cannot serialize user");
+                        
+                        //write to file
+                        let mut writer = BufWriter::new(file);
+                        writeln!(writer, "{}", serialized_user).expect("cannot write to users.txt");
+                    },
+                    Err(e) => {
+                        return Err(e)
+                    }
                 }
             },
             Err(e) => {
@@ -102,7 +107,7 @@ pub fn users_collection(file: &File) -> Vec<User> {
     users
 }
 
-fn check_password_secure(pass: &str) -> bool {
+fn check_password_secure(pass: &str) -> Result<(), RegisterError> {
     let mut number = false;
     let mut other_char = false;
     let mut uppercase = false;
@@ -135,9 +140,9 @@ fn check_password_secure(pass: &str) -> bool {
     }
     
     if number == true && other_char == true && uppercase == true {
-        return true
+        return Ok(())
     } else {
-        return false
+        return Err(RegisterError::PasswordInsecure("Your password is a hacker's breakfast, make it more secure!".to_string()))
     }
 }
 
