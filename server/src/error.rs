@@ -3,3 +3,13 @@ pub enum RegisterError {
     EmailTaken(String),
     PasswordInsecure(String),
 }
+
+pub enum LoginError {
+    WrongPassword(String),
+    UsernameErr(String),
+}
+
+pub enum AppError {
+    LoginError(LoginError),
+    RegisterError(RegisterError,)
+}

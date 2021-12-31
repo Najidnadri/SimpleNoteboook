@@ -1,8 +1,8 @@
-use crate::RegisterError;
+use crate::{RegisterError, error::{LoginError, AppError}};
 
 use std::{io::{Write, BufWriter, BufReader, BufRead}, fs::File};
 
-use bcrypt;
+use bcrypt::{self, verify};
 use serde::{self, Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -20,7 +20,7 @@ pub struct User {
 }
 
 pub struct LoginInfo {
-    pub username: String,
+    pub username_email: String,
     pub pass: String,
 }
 
@@ -67,7 +67,28 @@ impl RegisterInfo {
     }
 }
 
-fn users_collection(file: &File) -> Vec<User> {
+impl LoginInfo {
+    pub fn validate_account(self) -> Result<(), LoginError> {
+        let file = std::fs::File::open("users.txt").expect("cannot open users.txt when validating");
+        let users = users_collection(&file);
+    
+        for i in users {
+            if i.username == self.username_email || i.email == self.username_email {
+                let valid = verify(&self.pass, &i.hash).expect("something wrong in bycrpt");
+                if valid {
+                    return Ok(())
+                } else {
+                    return Err(LoginError::WrongPassword("Wrong Password!".to_string()))
+                }
+            } else {
+                continue
+            }
+        }
+        Err(LoginError::UsernameErr("username or does not exist".to_string()))
+    }
+}
+
+pub fn users_collection(file: &File) -> Vec<User> {
     let reader = BufReader::new(file);
     let lines = reader.lines();
     let mut users = Vec::new();
@@ -120,10 +141,20 @@ fn check_password_secure(pass: &str) -> bool {
     }
 }
 
-pub fn filter_error(err: RegisterError) {
+pub fn filter_error(err: AppError) {
     match err {
-        RegisterError::EmailTaken(s) => println!("{}", s),
-        RegisterError::PasswordInsecure(s) => println!("{}", s),
-        RegisterError::UsernameExisted(s) => println!("{}", s),
+        AppError::LoginError(e) => {
+            match e {
+                LoginError::UsernameErr(s) => println!("{}", s),
+                LoginError::WrongPassword(s) => println!("{}", s),
+            }
+        },
+        AppError::RegisterError(e) => {
+            match e {
+                RegisterError::EmailTaken(s) => println!("{}", s),
+                RegisterError::PasswordInsecure(s) => println!("{}", s),
+                RegisterError::UsernameExisted(s) => println!("{}", s),
+            }
+        }
     }
 }
