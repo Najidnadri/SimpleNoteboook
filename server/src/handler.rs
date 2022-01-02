@@ -19,6 +19,7 @@ pub struct User {
     pub hash: String,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
 pub struct LoginInfo {
     pub username_email: String,
     pub pass: String,
