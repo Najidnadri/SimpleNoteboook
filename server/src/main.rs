@@ -3,13 +3,13 @@ mod handler;
 mod testing;
 
 
-use std::{net::{TcpListener, Shutdown, TcpStream}, io::{Read, BufWriter, Write}};
+use std::{net::{TcpListener, Shutdown, TcpStream}, io::{Read, BufWriter, Write}, thread};
 
-use error::RegisterError;
-use handler::{RegisterInfo, LoginInfo, filter_error};
+use error::{RegisterError, LoginError};
+use handler::{RegisterInfo, LoginInfo};
 use serde::{Deserialize, Serialize};
 
-use crate::error::AppError;
+
 
 #[derive(Deserialize, Serialize, Debug)]
 enum Action {
@@ -21,7 +21,9 @@ enum Action {
 #[derive(Deserialize, Serialize, Debug)]
 enum ServerResponse {
     AccountValidated,
+    LoginError(LoginError),
     AccountRegistered,
+    RegErr(RegisterError),
     SavedPage,
     Err,
 }
@@ -29,46 +31,63 @@ enum ServerResponse {
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
 
-    let (stream, _addr) = listener.accept().unwrap();
+    for stream in listener.incoming() {
+        if let Ok(stream) = stream {
+            handle_client(stream)
+        }
+    }
+}
 
-    loop {
-        let mut stream = stream.try_clone().unwrap();
-        let mut data = [0 as u8; 1000]; // using 50 byte buffer
-        match stream.read(&mut data) {
-            Ok(_size) => {
-                let request = eliminate_zeros(data);
-                let deserialized_request: Action = serde_json::from_str(&request).expect("cannot deserialzied");
-                match deserialized_request {
-                    Action::ValidateAccount(user) => {
-                        println!("validating account..");
-                        let validation = user.validate_account();
-                        match validation {
-                            Ok(_) => {
-                                let response = ServerResponse::AccountValidated;
-                                send_response(response, &stream);
-                            },
-                            Err(e) => filter_error(AppError::LoginError(e)),
-                        }
-                    },
-                    Action::RegisterAccount(user) => {
-                        println!("registering user");
-                        let registering = user.register_account();
-                        match registering {
-                            Ok(_) => println!("User Registered!"),
-                            Err(e) => {
-                                filter_error(AppError::RegisterError(e));
+fn handle_client(stream: TcpStream) {
+    thread::spawn(move || {
+        loop {
+            let mut stream = stream.try_clone().unwrap();
+            let mut data = [0 as u8; 1000]; // using 50 byte buffer
+            match stream.read(&mut data) {
+                Ok(_size) => {
+                    let request = eliminate_zeros(data);
+                    let deserialized_request: Action = serde_json::from_str(&request).expect("cannot deserialzied");
+                    match deserialized_request {
+                        Action::ValidateAccount(user) => {
+                            println!("validating account..");
+                            let validation = user.validate_account();
+                            match validation {
+                                Ok(_) => {
+                                    let response = ServerResponse::AccountValidated;
+                                    send_response(response, &stream);
+                                },
+                                Err(e) => {
+                                    let response = ServerResponse::LoginError(e);
+                                    send_response(response, &stream);
+                                },
                             }
-                        }
-                    },
-                    Action::SavePage => {},
+                        },
+                        Action::RegisterAccount(user) => {
+                            println!("registering user");
+                            let registering = user.register_account();
+                            match registering {
+                                Ok(_) => {
+                                    let response = ServerResponse::AccountRegistered;
+                                    send_response(response, &stream);
+                                    println!("User Registered!")
+                                },
+                                Err(e) => {
+                                    let response = ServerResponse::RegErr(e);
+                                    send_response(response, &stream);
+                                }
+                            }
+                        },
+                        Action::SavePage => {},
+                    }
+                },
+                Err(_) => {
+                    println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
+                    stream.shutdown(Shutdown::Both).unwrap();
                 }
-            },
-            Err(_) => {
-                println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
-                stream.shutdown(Shutdown::Both).unwrap();
-            }
-        }{}
-    } 
+            }{}
+        }
+    });
+    
 }
 
 fn _save_page() {
