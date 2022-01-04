@@ -2,10 +2,9 @@ use serde::{Deserialize, Serialize};
 
 
 #[derive(Debug, Deserialize, Serialize)]
-pub enum RegisterError {
-    UsernameExisted(String),
-    EmailTaken(String),
-    PasswordInsecure(String),
+pub struct RegisterError {
+    pub username_existed: bool,
+    pub email_taken: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

@@ -1,24 +1,31 @@
 use std::{net::{TcpStream, Shutdown}, io::{BufWriter, Read, Write}};
 
 use eframe::epi::App;
-use egui::{Vec2, Rect, Pos2, Color32, Visuals};
+use egui::Color32;
 use serde::{Deserialize, Serialize};
-
-use crate::Action;
+use crate::regpage::PassStatus;
+use crate::{error::{LoginError, RegisterError}, loginpage, regpage};
 
 pub const LIGHT_YELLOW: Color32 = Color32::from_rgb(255, 255, 0xE0);
 pub const GRAY: Color32 = Color32::from_rgb(160, 160, 160);
+pub const RED: Color32 = Color32::from_rgb(255, 0, 0);
+pub const GREEN: Color32 = Color32::from_rgb(0, 255, 0);
+pub const LIGHT_RED: Color32 = Color32::from_rgb(255, 128, 128);
 
 pub enum Page {
     LoginPage,
-    RegistrationPage,
-    HomePage,
+    ErrLoginPage,
+    RegistrationPage(bool, bool, PassStatus, bool),
+    _HomePage,
+    RegisteredPage,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum ServerResponse {
     AccountValidated,
+    LoginError(LoginError),
     AccountRegistered,
+    RegErr(RegisterError),
     SavedPage,
     Err,
 }
@@ -37,11 +44,12 @@ pub struct LoginInfo {
     pub pass: String,
 }
 
-#[derive(Deserialize, Serialize, Debug, Default)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct RegisterInfo {
     pub username: String,
     pub email: String,
     pub password: String,
+    pub confirm_pass: String,
 }
 
 impl Event {
@@ -60,7 +68,10 @@ impl Event {
 impl App for Event {
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut eframe::epi::Frame<'_>) {
         match self.page {
-            Page::LoginPage => login_page(self, ctx),
+            Page::LoginPage => loginpage::login_page(self, ctx),
+            Page::RegistrationPage(a, b, c, d) => regpage::registration_page(self, ctx, a, b, c, d),
+            Page::RegisteredPage =>  regpage::registered_page(self, ctx),
+            Page::ErrLoginPage => loginpage::err_login_page(self, ctx),
             _ => {}
         }
     }
@@ -70,56 +81,14 @@ impl App for Event {
     }
 }
 
-fn login_page(event: &mut Event, ctx: &egui::CtxRef) {
-
-    let mut visuals = Visuals::default();
-    visuals.faint_bg_color = GRAY;
-    visuals.dark_mode = false;
-    visuals.override_text_color = Some(LIGHT_YELLOW);
-    
-    let login_card = Rect::from_center_size(Pos2::new(500.0, 600.0), Vec2::new(300.0, 500.0));
-
-    egui::TopBottomPanel::top("header").default_height(100.).show(ctx, |ui| {
-        ui.add_sized([100.0, 100.0],  egui::Label::new("My simple notebook").underline()); 
-    });
-
-    egui::CentralPanel::default().show(ctx, |ui| {
-        ui.vertical_centered(|ui| {
-            ui.allocate_ui_at_rect(login_card, |ui| {
-                ui.label(event.msg.clone());
-                let _username_email = ui.add(egui::TextEdit::singleline(&mut event.login_info.username_email));
-                let _pass = ui.add(egui::TextEdit::singleline(&mut event.login_info.pass).password(true));
-                let login_button = ui.button("Log In");
-                if login_button.clicked() {
-                    let action = Action::ValidateAccount(event.login_info.clone());
-                    let serialized_action = serde_json::to_string(&action).expect("cannot serialized action");
-                    make_client_request(event, serialized_action)
-                }
-            });
-        });
-    });
-}
-
-fn make_client_request(event: &mut Event, action: String) {
-
-    let response = send_request(action, &event.stream);
-
-    match response {
-        ServerResponse::AccountValidated => event.msg = "Welcome!!".to_string(),
-        ServerResponse::AccountRegistered => todo!(),
-        ServerResponse::SavedPage => todo!(),
-        ServerResponse::Err => todo!(),
-    }
-}
-
-fn send_request(action: String, mut stream: &TcpStream) -> ServerResponse {
+pub fn send_request(action: String, mut stream: &TcpStream) -> ServerResponse {
     let mut writer = BufWriter::new(stream);
     writer.write_all(action.as_bytes()).expect("could not write");
     writer.flush().expect("cannot flush");
     println!("After write");
 
     //read from server
-    let mut data = [0 as u8; 50]; // using 50 byte buffer
+    let mut data = [0 as u8; 1000]; // using 50 byte buffer
     match stream.read(&mut data) {
         Ok(size) => {
             let response = eliminate_zeros(data);
@@ -135,7 +104,7 @@ fn send_request(action: String, mut stream: &TcpStream) -> ServerResponse {
     ServerResponse::Err
 }
 
-fn eliminate_zeros(data: [u8; 50]) -> String {
+pub fn eliminate_zeros(data: [u8; 1000]) -> String {
     let mut new_data: Vec<u8> = Vec::new();
     for i in data {
         if i == 0 {

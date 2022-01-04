@@ -8,3 +8,4 @@
 {"username":"njwdnvwijnwi","email":"jwdknvwvnnw","hash":"$2b$12$mWNDPEaSPVw4/N6I62mrQut/R2WZPMc3w6wnRYIhQGHpA8yCNMAhW"}
 {"username":"nwonvcwvc","email":"nciowencvor","hash":"$2b$12$CCY5PFMxL9vJwiGkofj82ODZRY/hGau3XKtoFw3vz4HR/3NvAVxH2"}
 {"username":"oicwwncwnv","email":"dnvjnwoldi","hash":"$2b$12$ZRGsEF8aFzhjKRyL87LrPePFx48iGAbJonq5wvVBqbQr5T99O.4H2"}
+{"username":"jfefe","email":"qwfue","hash":"$2b$12$dTMROr1pvtjzhHg7u.dcKOPNlYVh2nYXO4sE.xjHUCxRvTHdNUDnm"}

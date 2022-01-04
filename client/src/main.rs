@@ -1,13 +1,17 @@
 //setup client
 mod handler;
-use handler::{Event, RegisterInfo, LoginInfo};
+mod error;
+mod loginpage;
+mod regpage;
 
+use handler::{Event, RegisterInfo, LoginInfo};
 use serde::{self, Deserialize, Serialize};
 
 use std::{error::Error, net::TcpStream};
 use egui::Vec2;
 use eframe::{NativeOptions, run_native};
 use tokio;
+
 
 #[derive(Debug, Deserialize, Serialize)]
 enum Action {

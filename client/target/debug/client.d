@@ -1,1 +1,1 @@
-C:\Users\user\projects\simplenotebook\client\target\debug\client.exe: C:\Users\user\projects\simplenotebook\client\src\handler.rs C:\Users\user\projects\simplenotebook\client\src\main.rs
+C:\Users\user\projects\simplenotebook\client\target\debug\client.exe: C:\Users\user\projects\simplenotebook\client\src\error.rs C:\Users\user\projects\simplenotebook\client\src\handler.rs C:\Users\user\projects\simplenotebook\client\src\loginpage.rs C:\Users\user\projects\simplenotebook\client\src\main.rs C:\Users\user\projects\simplenotebook\client\src\regpage.rs

@@ -31,25 +31,18 @@ impl RegisterInfo {
         let users = users_collection(&file);
         match self.check_existed(users) {
             Ok(_) => {
-                let pass = &self.password;
-                match check_password_secure(pass) {
-                    Ok(_) => {
-                        let hash = bcrypt::hash(pass, bcrypt::DEFAULT_COST).expect("cannot brcypt pass");
-                        let user = User {
-                            username: self.username.clone(),
-                            email: self.email.clone(),
-                            hash,
-                        };
-                        let serialized_user = serde_json::to_string(&user).expect("cannot serialize user");
-                        
-                        //write to file
-                        let mut writer = BufWriter::new(file);
-                        writeln!(writer, "{}", serialized_user).expect("cannot write to users.txt");
-                    },
-                    Err(e) => {
-                        return Err(e)
-                    }
-                }
+                let pass = &self.password;   
+                let hash = bcrypt::hash(pass, bcrypt::DEFAULT_COST).expect("cannot brcypt pass");
+                let user = User {
+                    username: self.username.clone(),
+                    email: self.email.clone(),
+                    hash,
+                };
+                let serialized_user = serde_json::to_string(&user).expect("cannot serialize user");
+                
+                //write to file
+                let mut writer = BufWriter::new(file);
+                writeln!(writer, "{}", serialized_user).expect("cannot write to users.txt");    
             },
             Err(e) => {
                 return Err(e);
@@ -60,14 +53,25 @@ impl RegisterInfo {
     }
 
     fn check_existed(&self, users: Vec<User>) -> Result<(), RegisterError> {
+        let mut username_existed = false;
+        let mut email_taken = false;
+
         for i in users {
             if i.username == self.username {
-                return Err(RegisterError::UsernameExisted("username existed".to_string()));
+                username_existed = true;
             }
     
             if i.email == self.email {
-                return Err(RegisterError::EmailTaken("Email taken".to_string()));
+                email_taken = true;
             }
+        }
+
+        if username_existed || email_taken {
+            let err = RegisterError {
+                username_existed,
+                email_taken,
+            };
+            return Err(err)
         }
         Ok(())
     }
@@ -107,7 +111,7 @@ pub fn users_collection(file: &File) -> Vec<User> {
     }
     users
 }
-
+/* 
 fn check_password_secure(pass: &str) -> Result<(), RegisterError> {
     let mut number = false;
     let mut other_char = false;
@@ -164,3 +168,4 @@ pub fn filter_error(err: AppError) {
         }
     }
 }
+*/
