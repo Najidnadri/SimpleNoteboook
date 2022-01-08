@@ -141,10 +141,6 @@ pub fn registration_page(event: &mut Event, ctx: &egui::CtxRef, usernameerr: boo
     });
 }
 
-pub fn err_reg_page(event: &mut Event, ctx: &egui::CtxRef) {
-
-}
-
 
 pub fn registered_page(event: &mut Event, ctx: &egui::CtxRef) {
     event.msg = "CONGRATS MY BOY YOU ARE REGISTERED!!".to_string();

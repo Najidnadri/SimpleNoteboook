@@ -3,8 +3,9 @@ mod handler;
 mod error;
 mod loginpage;
 mod regpage;
+mod homepage;
 
-use handler::{Event, RegisterInfo, LoginInfo};
+use handler::{Event, RegisterInfo, LoginInfo, ChunkDetails};
 use serde::{self, Deserialize, Serialize};
 
 use std::{error::Error, net::TcpStream};
@@ -17,7 +18,7 @@ use tokio;
 enum Action {
     ValidateAccount(LoginInfo),
     RegisterAccount(RegisterInfo),
-    SavePage,
+    SavePage(ChunkDetails),
 }
 
 #[tokio::main]

@@ -5,41 +5,51 @@ mod testing;
 
 use std::{net::{TcpListener, Shutdown, TcpStream}, io::{Read, BufWriter, Write}, thread};
 
-use error::{RegisterError, LoginError};
+use error::{RegisterError, LoginError, SaveError};
 use handler::{RegisterInfo, LoginInfo};
 use serde::{Deserialize, Serialize};
+use tokio;
 
+use crate::handler::fetch_note;
 
+#[derive(Deserialize, Serialize, Debug)]
+struct ChunkDetails {
+   // chunknum: usize,
+    account: String,
+    data: String,
+}
 
 #[derive(Deserialize, Serialize, Debug)]
 enum Action {
     ValidateAccount(LoginInfo),
     RegisterAccount(RegisterInfo),
-    SavePage,
+    SavePage(ChunkDetails),
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 enum ServerResponse {
-    AccountValidated,
+    AccountValidated(String),
     LoginError(LoginError),
     AccountRegistered,
     RegErr(RegisterError),
     SavedPage,
+    SavedPageErr,
     Err,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
 
     for stream in listener.incoming() {
         if let Ok(stream) = stream {
-            handle_client(stream)
+            handle_client(stream).await
         }
     }
 }
 
-fn handle_client(stream: TcpStream) {
-    thread::spawn(move || {
+async fn handle_client(stream: TcpStream) {
+    tokio::spawn(async move {
         loop {
             let mut stream = stream.try_clone().unwrap();
             let mut data = [0 as u8; 1000]; // using 50 byte buffer
@@ -50,10 +60,16 @@ fn handle_client(stream: TcpStream) {
                     match deserialized_request {
                         Action::ValidateAccount(user) => {
                             println!("validating account..");
+                            let username = user.username_email.clone();
                             let validation = user.validate_account();
                             match validation {
                                 Ok(_) => {
-                                    let response = ServerResponse::AccountValidated;
+                                    let mut file = std::fs::File::open(format!("{}.txt", username)).unwrap();
+                                    let mut buffer = String::new();
+                                    let _readed = file.read_to_string(&mut buffer).unwrap();
+                                    println!("note: {}", buffer);
+                                    let response = ServerResponse::AccountValidated(buffer);
+                                    println!("response: {:?}", response);
                                     send_response(response, &stream);
                                 },
                                 Err(e) => {
@@ -77,7 +93,21 @@ fn handle_client(stream: TcpStream) {
                                 }
                             }
                         },
-                        Action::SavePage => {},
+                        Action::SavePage(s) => {
+                            println!("saving page");
+                            match save_page(s).await {
+                                Ok(_) => {
+                                    let response = ServerResponse::SavedPage;
+                                    send_response(response, &stream);
+                                    println!("page saved");
+                                },
+                                Err(e) => {
+                                    let response = ServerResponse::SavedPageErr;
+                                    send_response(response, &stream);
+                                    println!("error while saving page: {:?}", e)
+                                },
+                            };
+                        },
                     }
                 },
                 Err(_) => {
@@ -86,12 +116,18 @@ fn handle_client(stream: TcpStream) {
                 }
             }{}
         }
-    });
-    
+    });  
 }
 
-fn _save_page() {
+async fn save_page(chunkdetails: ChunkDetails) -> Result<(), SaveError> {
+    let mut file = std::fs::OpenOptions::new().write(true).read(true).open(format!("{}.txt", &chunkdetails.account))
+    .map_err(|_e| SaveError::CannotOpenfile)
+    .unwrap();
 
+    file.set_len(0).map_err(|_e| SaveError::CannotTruncate).unwrap();
+    file.write_all(chunkdetails.data.as_bytes()).map_err(|_e| SaveError::CannotWrite).unwrap();
+
+    Ok(())
 }
 
 fn eliminate_zeros(data: [u8; 1000]) -> String {

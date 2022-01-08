@@ -1,4 +1,3 @@
-{"username":"Muhdnajid","email":"muhd.najid.nadri@gmail.com","hash":"$2b$12$bBTV1DNhBg9fmmsdu10Nm.YPwrvZinrQCSKSgB16ocylIoEnbgY36"}
 {"username":"Najidnadri","email":"mohd.najid.nadri@gmail.com","hash":"$2b$12$SX36MfbR2NG3jVbVuGdeOevpgYrIGFyu3mDkWGCm35QwaIhzaqhoG"}
 {"username":"hello world","email":"najidtest@gmail.com","hash":"$2b$12$sYq3c8fN1hI3zi0iUF1UfesH1/0eJ9a0WSFfvWLdHHokngbr3aqhu"}
 {"username":"aiman","email":"aiman@gmail.com","hash":"$2b$12$EjOY9od8qRyHlxI3BtvPduqNsoxFv7xTvdJ4Bro3X/8kjAqtZb8wa"}
@@ -9,3 +8,5 @@
 {"username":"nwonvcwvc","email":"nciowencvor","hash":"$2b$12$CCY5PFMxL9vJwiGkofj82ODZRY/hGau3XKtoFw3vz4HR/3NvAVxH2"}
 {"username":"oicwwncwnv","email":"dnvjnwoldi","hash":"$2b$12$ZRGsEF8aFzhjKRyL87LrPePFx48iGAbJonq5wvVBqbQr5T99O.4H2"}
 {"username":"jfefe","email":"qwfue","hash":"$2b$12$dTMROr1pvtjzhHg7u.dcKOPNlYVh2nYXO4sE.xjHUCxRvTHdNUDnm"}
+{"username":"Muhdnajid","email":"muhd.najid.nadri@gmail.com","hash":"$2b$12$dW7NyHeFQtmqZj2uQK9D/O3ofok0ygxVBNcfRopCcCv7JDPzdfEkO"}
+{"username":"najidnadri","email":"tupak@gmail.com","hash":"$2b$12$wqn7VYur0EkGY.QmMN2qp.VcoLmucY8mbaQoVE8HjdlGa2umprAOm"}

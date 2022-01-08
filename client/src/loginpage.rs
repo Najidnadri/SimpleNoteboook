@@ -33,14 +33,21 @@ pub fn login_page(event: &mut Event, ctx: &egui::CtxRef) {
                 ui.add_space(10.0);
                 let login_button = ui.button("Log In");
                 let reg_button = ui.button("Dont have an account yet?");
+                let shortcut = ui.button("go shortcut");
+                if shortcut.clicked() {
+                    event.page = Page::HomePage
+                }
                 if login_button.clicked() {
                     let action = Action::ValidateAccount(event.login_info.clone());
                     let serialized_action = serde_json::to_string(&action).expect("cannot serialized login action");
                     match send_request(serialized_action, &event.stream) {
-                        ServerResponse::AccountValidated => {
+                        ServerResponse::AccountValidated(s) => {
+                            event.data = s;
+                            event.user = event.login_info.username_email.clone();
                             event.msg = "Welcome!!".to_string();
                             event.login_info.username_email = String::default();
                             event.login_info.pass = String::default();
+                            event.page = Page::HomePage;
                         },
                         ServerResponse::LoginError(e) => {
                             match e {
@@ -93,11 +100,13 @@ pub fn err_login_page(event: &mut Event, ctx: &egui::CtxRef) {
                 ui.add_space(10.0);
                 let login_button = ui.button("Log In");
                 let reg_button = ui.button("Dont have an account yet?");
+
                 if login_button.clicked() {
                     let action = Action::ValidateAccount(event.login_info.clone());
                     let serialized_action = serde_json::to_string(&action).expect("cannot serialized login action");
                     match send_request(serialized_action, &event.stream) {
-                        ServerResponse::AccountValidated => {
+                        ServerResponse::AccountValidated(s) => {
+                            event.data = s;
                             event.msg = "Welcome!!".to_string();
                             event.login_info.username_email = String::default();
                             event.login_info.pass = String::default();

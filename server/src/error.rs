@@ -13,6 +13,13 @@ pub enum LoginError {
     UsernameErr(String),
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub enum SaveError {
+    CannotOpenfile,
+    CannotWrite,
+    CannotTruncate,
+}
+
 pub enum AppError {
     LoginError(LoginError),
     RegisterError(RegisterError,)

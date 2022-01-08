@@ -1,6 +1,6 @@
 use crate::{RegisterError, error::{LoginError, AppError}};
 
-use std::{io::{Write, BufWriter, BufReader, BufRead}, fs::File};
+use std::{io::{Write, BufWriter, BufReader, BufRead, Read}, fs::File};
 
 use bcrypt::{self, verify};
 use serde::{self, Deserialize, Serialize};
@@ -49,6 +49,7 @@ impl RegisterInfo {
             } 
         }
 
+        let new_file = std::fs::File::create(format!("{}.txt", self.username.clone())).unwrap();
         Ok(())
     }
 
@@ -110,6 +111,14 @@ pub fn users_collection(file: &File) -> Vec<User> {
         }
     }
     users
+}
+
+pub fn fetch_note(user: String) -> String {
+    let f = std::fs::File::open(format!("{}.txt", user)).unwrap();
+    let mut reader = BufReader::new(f);
+    let mut buff = [0u8; 3000];
+    let _readed = reader.read(&mut buff).unwrap();
+    String::from_utf8_lossy(&buff).to_string()
 }
 /* 
 fn check_password_secure(pass: &str) -> Result<(), RegisterError> {

@@ -1,5 +1,4 @@
 
-
 #[test]
 fn add_user() {
     use crate::handler::RegisterInfo;
@@ -26,4 +25,25 @@ fn validate_user() {
 
     let login_response = login_info.validate_account().unwrap();
     assert_eq!(login_response, ())
+}
+
+#[tokio::test]
+async fn save_data() {
+    use crate::ChunkDetails;
+    use crate::save_page;
+
+    let chunk = ChunkDetails {
+        //chunknum: 0,
+        account: "Muhdnajid".to_string(),
+        data: "Hello my name is najid".to_string(),
+    };
+
+    match save_page(chunk).await {
+    Ok(_) => {
+        println!("page saved!");
+    },
+    Err(e) => {
+        println!("error saving page: {:?}", e);
+    },
+};
 }

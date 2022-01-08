@@ -3,7 +3,7 @@ use std::{net::{TcpStream, Shutdown}, io::{BufWriter, Read, Write}};
 use eframe::epi::App;
 use egui::Color32;
 use serde::{Deserialize, Serialize};
-use crate::regpage::PassStatus;
+use crate::{regpage::PassStatus, homepage::home_page};
 use crate::{error::{LoginError, RegisterError}, loginpage, regpage};
 
 pub const LIGHT_YELLOW: Color32 = Color32::from_rgb(255, 255, 0xE0);
@@ -16,26 +16,35 @@ pub enum Page {
     LoginPage,
     ErrLoginPage,
     RegistrationPage(bool, bool, PassStatus, bool),
-    _HomePage,
+    HomePage,
     RegisteredPage,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum ServerResponse {
-    AccountValidated,
+    AccountValidated(String),
     LoginError(LoginError),
     AccountRegistered,
     RegErr(RegisterError),
     SavedPage,
+    SavedPageErr,
     Err,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ChunkDetails {
+    pub account: String,
+    pub data: String,
+}
+
 pub struct Event {
+    pub user: String,
     pub msg: String,
     pub page: Page,
     pub reg_info: RegisterInfo,
     pub login_info: LoginInfo,
     pub stream: TcpStream,
+    pub data: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
@@ -55,11 +64,13 @@ pub struct RegisterInfo {
 impl Event {
     pub fn new(stream: TcpStream) -> Self {
         Event {
+            user: String::default(),
             msg: String::from("Username or email"),
             page: Page::LoginPage,
             reg_info: RegisterInfo::default(),
             login_info: LoginInfo::default(),
             stream,
+            data: String::default(),
         }
     }
 }
@@ -72,7 +83,9 @@ impl App for Event {
             Page::RegistrationPage(a, b, c, d) => regpage::registration_page(self, ctx, a, b, c, d),
             Page::RegisteredPage =>  regpage::registered_page(self, ctx),
             Page::ErrLoginPage => loginpage::err_login_page(self, ctx),
-            _ => {}
+            Page::HomePage => {
+                home_page(self, ctx)
+            }
         }
     }
 
