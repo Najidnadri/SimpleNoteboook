@@ -17,7 +17,7 @@ Clone the project
 Go to the project directory
 
 ```bash
-  cd Hangman-CLI
+  cd SimpleNoteBook
 ```
 In one terminal, got to the server and run it.
 ```bash
